@@ -1,0 +1,47 @@
+teamcitydb:
+  image: postgres:9.3
+  ports:
+    - "5432:5432"
+  environment:
+    - POSTGRES_USER=teamcity
+    - POSTGRES_PASSWORD=teamcity
+    - POSTGRES_DB=teamcity
+  volumes_from:
+    - pgdata
+pgdata:
+  image: cogniteev/echo
+  command: echo 'Data Container for PostgreSQL'
+  volumes:
+    - /var/lib/postgresql/data
+teamcity:
+ image: sjoerdmulder/teamcity
+ ports:
+   - "8111:8111"
+ links:
+   - teamcitydb
+ environment:
+   - TEAMCITY_DATA_PATH=/var/lib/teamcity
+   - DB_HOSTNAME=db
+   - DB_DATABASE=teamcitydb
+   - DB_USERNAME=teamcitydb
+   - DB_PASSWORD=teamcitydb
+ volumes:
+   - ./volumes/teamcity:/var/lib/teamcity
+
+#TODO add some agents
+
+#TODO for initial startup & DB setup execute
+#SETUP_TEAMCITY_SQL="create role teamcity with login password 'teamcity';create database teamcity owner teamcity;"
+#docker run --name some-postgres -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD -d postgres
+# Create the database using psql
+
+#docker run -it --link teamcity_teamcitydb_1:postgres --rm -e "SETUP_TEAMCITY_SQL=$SETUP_TEAMCITY_SQL" -e "PGPASSWORD=$POSTGRES_PASSWORD" postgres bash -c 'exec echo $SETUP_TEAMCITY_SQL |psql -h "$POSTGRES_PORT_5432_TCP_ADDR" -p "$POSTGRES_PORT_5432_TCP_PORT" -U postgres'
+
+
+#docker run --link some-postgres:postgres -v volumes/teamcity:/var/lib/teamcity -d sjoerdmulder/teamcity:latest
+# Start an official docker postgres instance
+#docker run --name some-postgres -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD -d postgres
+# Create the database using psql
+#kdocker run -it --link some-postgres:postgres --rm -e
+  #command: "SETUP_TEAMCITY_SQL=$SETUP_TEAMCITY_SQL" -e "PGPASSWORD=" postgres bash -c 'exec echo $SETUP_TEAMCITY_SQL |psql -h "$POSTGRES_PORT_5432_TCP_ADDR" -p "$POSTGRES_PORT_5432_TCP_PORT" -U postgres'
+
